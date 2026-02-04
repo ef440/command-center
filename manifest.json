@@ -1,0 +1,41 @@
+{
+  "name": "Command Center | Newport Bay",
+  "short_name": "Command Center",
+  "description": "ADHD-optimized task management for Erich Feierabend",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c1929",
+  "theme_color": "#1a5fb4",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "business"],
+  "shortcuts": [
+    {
+      "name": "Quick Capture",
+      "short_name": "Capture",
+      "description": "Capture a thought quickly",
+      "url": "/?action=capture",
+      "icons": [{ "src": "icon-capture.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Morning Review",
+      "short_name": "Review",
+      "description": "Start your morning check-in",
+      "url": "/?action=review",
+      "icons": [{ "src": "icon-review.png", "sizes": "96x96" }]
+    }
+  ]
+}

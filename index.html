@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Command Center">
+    <meta name="theme-color" content="#0c1929">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-180.png">
+    <title>Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+        :root{--brand:#1a5fb4;--brand-light:#3584e4;--bg:#0c1929;--bg2:#0f2744;--card:rgba(15,39,68,0.4);--text:#f8fafc;--text2:#94a3b8;--muted:#64748b;--border:rgba(100,120,140,0.15);--success:#10b981;--warn:#f59e0b;--danger:#ef4444;--newport:#1a5fb4;--scef:#dc2626;--cssi:#16a34a;--erich:#f97316;--family:#db2777;--kerry:#eab308;--kate:#14b8a6;--quinn:#1f2937;--all:#6b7280}
+        body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(145deg,var(--bg),var(--bg2),var(--bg));color:var(--text);min-height:100vh}
+        .app{padding:max(12px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(70px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+        .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+        .header-left{display:flex;align-items:center;gap:12px}
+        .photo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#4b5563,#374151);border:2px solid #4b5563;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff}
+        .greeting{font-size:17px;font-weight:500}
+        .date{font-size:11px;color:var(--muted)}
+        .stats{display:flex;gap:12px}
+        .stat{text-align:center}
+        .stat-val{font-size:16px;font-weight:600}
+        .stat-lbl{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px}
+        .filters{display:flex;gap:6px;overflow-x:auto;padding:6px 0;margin-bottom:12px;scrollbar-width:none}
+        .filters::-webkit-scrollbar{display:none}
+        .filter{padding:6px 10px;background:var(--card);border:1px solid var(--border);border-radius:16px;color:var(--text2);font-size:10px;font-weight:500;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:4px}
+        .filter.active{color:#fff;border-color:transparent}
+        .dot{width:6px;height:6px;border-radius:50%}
+        .capture{background:linear-gradient(135deg,rgba(26,95,180,0.12),rgba(26,95,180,0.06));border:1px solid rgba(26,95,180,0.35);border-radius:14px;padding:10px;margin-bottom:12px;display:flex;gap:8px}
+        .mic{width:40px;height:40px;background:var(--brand);border:none;border-radius:10px;font-size:16px;cursor:pointer;flex-shrink:0}
+        .mic.on{background:var(--danger);animation:pulse 1.5s infinite}
+        @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+        .cap-input{flex:1;min-height:40px;background:rgba(15,39,68,0.6);border:1px solid rgba(26,95,180,0.25);border-radius:10px;padding:10px;color:var(--text);font-size:13px;font-family:inherit;resize:none;outline:none}
+        .cap-input::placeholder{color:var(--muted)}
+        .cap-btn{padding:10px 14px;background:var(--brand);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:600;cursor:pointer}
+        .cap-btn:disabled{background:rgba(100,100,100,0.3)}
+        .focus{background:var(--card);border:2px dashed rgba(100,120,140,0.25);border-radius:12px;padding:12px;margin-bottom:12px;position:relative}
+        .focus.active{background:linear-gradient(145deg,rgba(26,95,180,0.18),var(--card));border:2px solid var(--brand)}
+        .focus.active::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--brand),var(--brand-light));border-radius:12px 12px 0 0}
+        .focus-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+        .focus-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:600}
+        .focus.active .focus-lbl{color:var(--brand-light)}
+        .timer{font-size:20px;font-weight:300;color:var(--muted);font-family:'JetBrains Mono',monospace}
+        .timer.on{color:var(--success)}
+        .focus h2{font-size:14px;font-weight:500;margin-bottom:3px}
+        .focus-meta{font-size:10px;color:var(--muted);margin-bottom:10px}
+        .focus-acts{display:flex;gap:6px;flex-wrap:wrap}
+        .fbtn{padding:8px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none}
+        .fbtn.start{background:rgba(16,185,129,0.15);border:1px solid var(--success);color:var(--success)}
+        .fbtn.pause{background:rgba(239,68,68,0.15);border:1px solid var(--danger);color:var(--danger)}
+        .fbtn.done{background:var(--brand);color:#fff}
+        .fbtn.sw{background:transparent;border:1px solid var(--border);color:var(--text2)}
+        .focus-empty{text-align:center;padding:6px 0;color:var(--text2);font-size:12px}
+        .tabs{display:flex;gap:4px;margin-bottom:8px;overflow-x:auto}
+        .tabs::-webkit-scrollbar{display:none}
+        .tab{padding:8px 10px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:11px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap}
+        .tab.active{background:var(--brand);border-color:var(--brand);color:#fff}
+        .tab-cnt{background:rgba(255,255,255,0.2);padding:1px 6px;border-radius:8px;font-size:9px}
+        .tab:not(.active) .tab-cnt{background:rgba(26,95,180,0.3);color:var(--brand-light)}
+        .list{background:var(--card);border-radius:10px;border:1px solid var(--border);overflow:hidden;max-height:240px;overflow-y:auto}
+        .item{padding:10px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(100,120,140,0.08);cursor:pointer}
+        .item:last-child{border-bottom:none}
+        .item:active{background:rgba(26,95,180,0.15)}
+        .item.urgent{background:rgba(239,68,68,0.05)}
+        .item-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+        .item-content{flex:1;min-width:0}
+        .item-title{font-size:12px;font-weight:500;display:flex;align-items:center;gap:5px;margin-bottom:2px}
+        .item-title span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .urg{background:var(--danger);color:#fff;font-size:7px;padding:2px 4px;border-radius:3px;font-weight:700}
+        .item-meta{font-size:9px;color:var(--muted)}
+        .arrow{width:20px;height:20px;border-radius:5px;background:rgba(26,95,180,0.25);display:flex;align-items:center;justify-content:center;color:var(--brand-light);font-size:10px}
+        .item-actions{display:flex;gap:4px}
+        .item-act{padding:4px 8px;background:rgba(26,95,180,0.15);border:none;border-radius:4px;color:var(--brand-light);font-size:8px;font-weight:600;cursor:pointer}
+        .item-act.danger{background:rgba(239,68,68,0.15);color:var(--danger)}
+        .item-act.success{background:rgba(16,185,129,0.15);color:var(--success)}
+        .chat{background:linear-gradient(145deg,rgba(26,95,180,0.15),var(--card));border:1px solid rgba(26,95,180,0.3);border-radius:10px;margin-top:10px}
+        .chat-head{padding:8px 12px;background:rgba(26,95,180,0.15);font-size:10px;font-weight:600;color:var(--brand-light);text-transform:uppercase;letter-spacing:1px;display:flex;align-items:center;gap:6px}
+        .chat-msgs{max-height:120px;overflow-y:auto;padding:10px 12px}
+        .msg{margin-bottom:8px;background:rgba(26,95,180,0.1);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text2);line-height:1.4}
+        .msg:last-child{margin-bottom:0}
+        .msg.user{background:rgba(100,120,140,0.15);margin-left:16px;color:var(--text)}
+        .qacts{display:flex;gap:6px;padding:0 12px 8px;flex-wrap:wrap}
+        .qact{padding:6px 10px;background:rgba(26,95,180,0.15);border:1px solid rgba(26,95,180,0.3);border-radius:6px;color:var(--brand-light);font-size:10px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:4px}
+        .chat-in{display:flex;gap:6px;padding:8px 12px;background:rgba(12,25,41,0.5);border-top:1px solid var(--border)}
+        .chat-input{flex:1;background:rgba(15,39,68,0.6);border:1px solid rgba(26,95,180,0.25);border-radius:8px;padding:8px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none}
+        .chat-input::placeholder{color:var(--muted)}
+        .chat-send{padding:8px 14px;background:var(--brand);border:none;border-radius:8px;color:#fff;font-size:11px;font-weight:600;cursor:pointer}
+        .nav{position:fixed;bottom:0;left:0;right:0;background:rgba(12,25,41,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:4px 0;padding-bottom:max(4px,env(safe-area-inset-bottom))}
+        .nav-item{display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 10px;color:var(--muted);font-size:8px;cursor:pointer;border:none;background:transparent}
+        .nav-item.active{color:var(--brand-light)}
+        .nav-icon{font-size:16px}
+        .empty{text-align:center;padding:20px 14px;color:var(--muted)}
+        .empty .icon{font-size:28px;margin-bottom:6px}
+        .section-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:12px 0 6px;padding-left:2px}
+        .email-badge{font-size:8px;padding:3px 8px;border-radius:4px;font-weight:600;color:#fff;margin-left:auto}
+    </style>
+</head>
+<body>
+<div class="app">
+    <header class="header">
+        <div class="header-left">
+            <div class="photo">EMF</div>
+            <div>
+                <div class="greeting" id="greet">Good morning, Erich</div>
+                <div class="date" id="date">Tuesday, February 4</div>
+            </div>
+        </div>
+        <div class="stats">
+            <div class="stat"><div class="stat-val" style="color:var(--brand)" id="inboxCnt">12</div><div class="stat-lbl">Inbox</div></div>
+            <div class="stat"><div class="stat-val" style="color:var(--danger)" id="urgCnt">4</div><div class="stat-lbl">Urgent</div></div>
+            <div class="stat"><div class="stat-val" style="color:var(--warn)" id="waitCnt">5</div><div class="stat-lbl">Waiting</div></div>
+            <div class="stat"><div class="stat-val" style="color:var(--cssi)" id="attachCnt">6</div><div class="stat-lbl">Attach</div></div>
+        </div>
+    </header>
+    
+    <div class="filters" id="filters">
+        <button class="filter active" data-f="all" data-c="var(--all)"><span class="dot" style="background:var(--all)"></span>All</button>
+        <button class="filter" data-f="newport" data-c="var(--newport)"><span class="dot" style="background:var(--newport)"></span>Newport Bay</button>
+        <button class="filter" data-f="scef" data-c="var(--scef)"><span class="dot" style="background:var(--scef)"></span>SCEF</button>
+        <button class="filter" data-f="cssi" data-c="var(--cssi)"><span class="dot" style="background:var(--cssi)"></span>CSSI</button>
+        <button class="filter" data-f="erich" data-c="var(--erich)"><span class="dot" style="background:var(--erich)"></span>Erich</button>
+        <button class="filter" data-f="family" data-c="var(--family)"><span class="dot" style="background:var(--family)"></span>Family</button>
+        <button class="filter" data-f="kerry" data-c="var(--kerry)"><span class="dot" style="background:var(--kerry)"></span>Kerry</button>
+        <button class="filter" data-f="kate" data-c="var(--kate)"><span class="dot" style="background:var(--kate)"></span>Kate</button>
+        <button class="filter" data-f="quinn" data-c="var(--quinn)"><span class="dot" style="background:var(--quinn)"></span>Quinn</button>
+    </div>
+    
+    <div class="capture">
+        <button class="mic" id="mic">🎤</button>
+        <textarea class="cap-input" id="capIn" placeholder="What's on your mind? Type or tap mic..." rows="1"></textarea>
+        <button class="cap-btn" id="capBtn" disabled>→</button>
+    </div>
+    
+    <div class="focus" id="focus">
+        <div class="focus-head">
+            <div class="focus-lbl" id="focusLbl">🎯 SELECT YOUR ONE THING</div>
+            <div class="timer" id="timer">00:00</div>
+        </div>
+        <div id="focusCont"><div class="focus-empty">Pick <strong>ONE</strong> item from below.</div></div>
+    </div>
+    
+    <div class="tabs">
+        <button class="tab active" data-t="emails">📧 Emails <span class="tab-cnt" id="emailTab">8</span></button>
+        <button class="tab" data-t="tasks">☑️ Tasks <span class="tab-cnt" id="taskTab">4</span></button>
+        <button class="tab" data-t="waiting">⏳ Waiting <span class="tab-cnt" id="waitTab">5</span></button>
+        <button class="tab" data-t="attach">📎 Attach <span class="tab-cnt" id="attachTab">6</span></button>
+        <button class="tab" data-t="scans">📄 Scans <span class="tab-cnt" id="scanTab">4</span></button>
+        <button class="tab" data-t="today">📅 Today <span class="tab-cnt" id="todayTab">5</span></button>
+    </div>
+    
+    <div class="list" id="list"></div>
+    
+    <div class="chat">
+        <div class="chat-head"><span>🤖</span> Claude Assistant</div>
+        <div class="chat-msgs" id="msgs"><div class="msg">I see <strong>8 emails</strong>, <strong>6 attachments</strong> to file, and <strong>4 scans</strong>. What should we tackle first?</div></div>
+        <div class="qacts">
+            <button class="qact" onclick="qa('emails')">📧 Process Emails</button>
+            <button class="qact" onclick="qa('attach')">📎 File Attachments</button>
+            <button class="qact" onclick="qa('scans')">📄 Process Scans</button>
+            <button class="qact" onclick="qa('tax')">📋 Tax Project</button>
+        </div>
+        <div class="chat-in">
+            <input class="chat-input" id="chatIn" placeholder="Ask Claude anything...">
+            <button class="chat-send" id="chatSend">Send</button>
+        </div>
+    </div>
+</div>
+
+<nav class="nav">
+    <button class="nav-item active"><span class="nav-icon">🏠</span>Home</button>
+    <button class="nav-item"><span class="nav-icon">📧</span>Email</button>
+    <button class="nav-item"><span class="nav-icon">📎</span>Files</button>
+    <button class="nav-item"><span class="nav-icon">💬</span>Chat</button>
+    <button class="nav-item"><span class="nav-icon">🌅</span>Review</button>
+</nav>
+
+<script>
+const S={f:'all',t:'emails',foc:null,run:false,sec:0,iv:null,
+colors:{all:'#6b7280',newport:'#1a5fb4',scef:'#dc2626',cssi:'#16a34a',erich:'#f97316',family:'#db2777',kerry:'#eab308',kate:'#14b8a6',quinn:'#1f2937'},
+emails:[
+{id:1,fr:'Sarah Johnson',sub:'MRAD Phase II - Documents Ready',acct:'newport',tm:'10:32 AM',unread:true,urg:true,hasAttach:true},
+{id:2,fr:'Marcus Chen',sub:'RE: NNN Starbucks Columbus - Counter Offer',acct:'scef',tm:'9:45 AM',unread:true,urg:true,hasAttach:true},
+{id:3,fr:'CSSI Analytics',sub:'Cost Seg Report Draft - Review Needed',acct:'cssi',tm:'Yesterday',unread:true,urg:false,hasAttach:true},
+{id:4,fr:'LinkedIn',sub:'Your weekly career update',acct:'erich',tm:'Yesterday',unread:false,urg:false,hasAttach:false},
+{id:5,fr:'Kate School',sub:'Field Trip Permission Slip Due Friday',acct:'kate',tm:'Yesterday',unread:true,urg:true,hasAttach:true},
+{id:6,fr:'Soccer Coach',sub:'Schedule Change - Quinn Practice',acct:'quinn',tm:'2 days ago',unread:false,urg:false,hasAttach:false},
+{id:7,fr:'Kerry',sub:'Dinner plans this weekend?',acct:'kerry',tm:'2 days ago',unread:false,urg:false,hasAttach:false},
+{id:8,fr:'Seminole County',sub:'Property Tax Notice - Aston Park',acct:'newport',tm:'3 days ago',unread:true,urg:false,hasAttach:true}
+],
+tasks:[
+{id:101,sub:'Prepare MRAD Phase II evidence package',cat:'newport',due:'Today',urg:true},
+{id:102,sub:'Gather 2025 tax docs for CPA',cat:'erich',due:'Feb 15',urg:true},
+{id:103,sub:'Review SCEF portal wireframes',cat:'scef',due:'Feb 10',urg:false},
+{id:104,sub:'Call back Marcus re: Columbus property',cat:'scef',due:'Today',urg:true}
+],
+wait:[
+{id:1,it:'MRAD Phase II final docs',ct:'Sarah',sn:'3 days',cat:'newport',nx:'Follow-up email'},
+{id:2,it:'LOI response Starbucks NNN',ct:'Tom (Broker)',sn:'5 days',cat:'scef',nx:'Call'},
+{id:3,it:'Cost seg draft approval',ct:'CSSI Team',sn:'1 week',cat:'cssi',nx:'Escalate'},
+{id:4,it:'Pre-Acquisition proposal',ct:'DataCorp',sn:'4 days',cat:'newport',nx:'Nudge'},
+{id:5,it:'Kerry PTO approval',ct:'School Admin',sn:'2 days',cat:'kerry',nx:'Check'}
+],
+attach:[
+{id:201,nm:'MRAD_Phase_II_Docs.pdf',fr:'Sarah Johnson',eml:'MRAD Phase II - Documents Ready',acct:'newport',sz:'2.4 MB',type:'pdf'},
+{id:202,nm:'Starbucks_LOI_Counter.pdf',fr:'Marcus Chen',eml:'NNN Starbucks Columbus',acct:'scef',sz:'156 KB',type:'pdf'},
+{id:203,nm:'CostSeg_Report_Draft.xlsx',fr:'CSSI Analytics',eml:'Cost Seg Report Draft',acct:'cssi',sz:'890 KB',type:'xlsx'},
+{id:204,nm:'FieldTrip_Permission.pdf',fr:'Kate School',eml:'Field Trip Permission Slip',acct:'kate',sz:'45 KB',type:'pdf'},
+{id:205,nm:'PropertyTax_Notice_2026.pdf',fr:'Seminole County',eml:'Property Tax Notice',acct:'newport',sz:'320 KB',type:'pdf'},
+{id:206,nm:'W2_2025_NewportBay.pdf',fr:'Payroll',eml:'Your W-2 is ready',acct:'erich',sz:'89 KB',type:'pdf'}
+],
+scans:[
+{id:1,nm:'Adobe Scan Feb 3.pdf',pv:'Property Tax Notice Seminole...',pg:2,cat:'newport'},
+{id:2,nm:'Adobe Scan Feb 2.pdf',pv:'CSSI Invoice cost seg...',pg:1,cat:'cssi'},
+{id:3,nm:'Adobe Scan Feb 1.pdf',pv:'W-2 Form Newport Bay...',pg:3,cat:'erich'},
+{id:4,nm:'Book Scan Ch 1-5.pdf',pv:'Commercial RE Investment...',pg:87,cat:'erich'}
+],
+sched:[
+{tm:'10:00 AM',ti:'Client Call - Aston Park',cal:'Newport Bay',dur:'30m',cat:'newport'},
+{tm:'11:30 AM',ti:'CSSI Partner Sync',cal:'CSSI',dur:'30m',cat:'cssi'},
+{tm:'2:00 PM',ti:'VAB Hearing Prep',cal:'Newport Bay',dur:'1h',cat:'newport'},
+{tm:'3:30 PM',ti:'Girls Soccer Pickup',cal:'Family',dur:'30m',cat:'family'},
+{tm:'5:00 PM',ti:'F3 Region Call',cal:'Erich',dur:'45m',cat:'erich'}
+],
+msgs:[{r:'c',tx:'I see <strong>8 emails</strong>, <strong>6 attachments</strong> to file, and <strong>4 scans</strong>. What should we tackle first?'}]
+};
+
+const ico=t=>({email:'✉️',voicemail:'📞',task:'☑️',thought:'💭',calendar:'📅'}[t]||'📋');
+const fmt=s=>`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+const greet=()=>{const h=new Date().getHours();return h<12?'Good morning':h<17?'Good afternoon':'Good evening'};
+const fmtDate=()=>new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+const filt=(a,key='cat')=>S.f==='all'?a:a.filter(i=>i[key]===S.f||i.acct===S.f);
+
+function render(){
+    const L=document.getElementById('list');let h='';
+    
+    if(S.t==='emails'){
+        const items=filt(S.emails,'acct');
+        if(!items.length)h='<div class="empty"><div class="icon">📭</div>No emails!</div>';
+        else items.forEach(i=>{
+            h+=`<div class="item${i.urg?' urgent':''}" onclick="emailAction(${i.id})">
+                <div class="item-icon" style="background:${S.colors[i.acct]}20">${i.unread?'📬':'📭'}</div>
+                <div class="item-content">
+                    <div class="item-title">
+                        <span>${i.sub}</span>
+                        ${i.urg?'<span class="urg">!</span>':''}
+                        ${i.hasAttach?'<span style="font-size:10px">📎</span>':''}
+                    </div>
+                    <div class="item-meta">${i.fr} • ${i.tm}</div>
+                </div>
+                <span class="email-badge" style="background:${S.colors[i.acct]}">${i.acct==='newport'?'NEWPORT BAY':i.acct==='scef'?'SCEF':i.acct==='cssi'?'CSSI':i.acct==='erich'?'ERICH':i.acct==='family'?'FAMILY':i.acct==='kerry'?'KERRY':i.acct==='kate'?'KATE':i.acct==='quinn'?'QUINN':i.acct.toUpperCase()}</span>
+            </div>`;
+        });
+    }else if(S.t==='tasks'){
+        const items=filt(S.tasks);
+        items.forEach(i=>{
+            h+=`<div class="item${i.urg?' urgent':''}" onclick="setFoc(${i.id},'task')">
+                <div class="item-icon" style="background:${S.colors[i.cat]}20">☑️</div>
+                <div class="item-content">
+                    <div class="item-title"><span>${i.sub}</span>${i.urg?'<span class="urg">!</span>':''}</div>
+                    <div class="item-meta"><span style="color:${S.colors[i.cat]}">${i.cat.toUpperCase()}</span> • Due: ${i.due}</div>
+                </div>
+                <div class="arrow">→</div>
+            </div>`;
+        });
+    }else if(S.t==='waiting'){
+        filt(S.wait).forEach(i=>{
+            h+=`<div class="item">
+                <div class="item-icon" style="background:rgba(245,158,11,0.15)">⏳</div>
+                <div class="item-content">
+                    <div class="item-title"><span>${i.it}</span></div>
+                    <div class="item-meta"><span style="color:${S.colors[i.cat]}">${i.cat.toUpperCase()}</span> • ${i.ct} • <span style="color:var(--warn)">${i.sn}</span></div>
+                    <div class="item-meta" style="margin-top:2px;color:var(--brand-light)">→ ${i.nx}</div>
+                </div>
+            </div>`;
+        });
+    }else if(S.t==='attach'){
+        const items=filt(S.attach,'acct');
+        items.forEach(i=>{
+            const typeIcon = i.type==='pdf'?'📕':i.type==='xlsx'?'📊':'📄';
+            h+=`<div class="item" onclick="attachAction(${i.id})">
+                <div class="item-icon" style="background:${S.colors[i.acct]}20">${typeIcon}</div>
+                <div class="item-content">
+                    <div class="item-title"><span>${i.nm}</span></div>
+                    <div class="item-meta">From: ${i.fr} • ${i.sz}</div>
+                </div>
+                <div class="item-actions">
+                    <button class="item-act success" onclick="event.stopPropagation();saveAttach(${i.id})">Save</button>
+                    <button class="item-act danger" onclick="event.stopPropagation();delAttach(${i.id})">Del</button>
+                </div>
+            </div>`;
+        });
+    }else if(S.t==='scans'){
+        S.scans.forEach(i=>{
+            h+=`<div class="item" onclick="procScan(${i.id})">
+                <div class="item-icon" style="background:rgba(100,120,140,0.2)">📄</div>
+                <div class="item-content">
+                    <div class="item-title"><span>${i.nm}</span></div>
+                    <div class="item-meta">${i.pv}</div>
+                    <div class="item-meta" style="color:${S.colors[i.cat]}">${i.pg} pages</div>
+                </div>
+                <button class="item-act" onclick="event.stopPropagation();procScan(${i.id})">File →</button>
+            </div>`;
+        });
+    }else if(S.t==='today'){
+        filt(S.sched).forEach(i=>{
+            h+=`<div class="item" style="border-left:3px solid ${S.colors[i.cat]}">
+                <div style="min-width:55px;font-size:11px;color:var(--brand-light);font-weight:600;font-family:'JetBrains Mono'">${i.tm}</div>
+                <div class="item-content">
+                    <div class="item-title"><span>${i.ti}</span></div>
+                    <div class="item-meta">${i.cal} • ${i.dur}</div>
+                </div>
+            </div>`;
+        });
+    }
+    L.innerHTML=h;
+}
+
+function renderFoc(){
+    const F=document.getElementById('focus'),C=document.getElementById('focusCont'),T=document.getElementById('timer'),Lb=document.getElementById('focusLbl');
+    if(S.foc){
+        F.classList.add('active');Lb.textContent='🎯 FOCUS NOW';T.textContent=fmt(S.sec);T.classList.toggle('on',S.run);
+        C.innerHTML=`<h2>${S.foc.sub}</h2><div class="focus-meta">${S.foc.cat||S.foc.acct||'Task'}</div>
+        <div class="focus-acts">
+            <button class="fbtn ${S.run?'pause':'start'}" onclick="togTimer()">${S.run?'⏸ Pause':'▶ Start'}</button>
+            <button class="fbtn done" onclick="doneFoc()">✓ Done</button>
+            <button class="fbtn sw" onclick="clrFoc()">Switch</button>
+        </div>`;
+    }else{
+        F.classList.remove('active');Lb.textContent='🎯 SELECT YOUR ONE THING';T.textContent='00:00';T.classList.remove('on');
+        C.innerHTML='<div class="focus-empty">Pick <strong>ONE</strong> item from below.</div>';
+    }
+}
+
+function updCnts(){
+    const emails=filt(S.emails,'acct'),tasks=filt(S.tasks),attach=filt(S.attach,'acct');
+    document.getElementById('inboxCnt').textContent=emails.length+tasks.length;
+    document.getElementById('urgCnt').textContent=emails.filter(i=>i.urg).length+tasks.filter(i=>i.urg).length;
+    document.getElementById('waitCnt').textContent=filt(S.wait).length;
+    document.getElementById('attachCnt').textContent=attach.length;
+    document.getElementById('emailTab').textContent=emails.length;
+    document.getElementById('taskTab').textContent=tasks.length;
+    document.getElementById('waitTab').textContent=filt(S.wait).length;
+    document.getElementById('attachTab').textContent=attach.length;
+    document.getElementById('scanTab').textContent=S.scans.length;
+    document.getElementById('todayTab').textContent=filt(S.sched).length;
+}
+
+function setFoc(id,type='task'){
+    if(type==='task')S.foc=S.tasks.find(i=>i.id===id);
+    else if(type==='email')S.foc=S.emails.find(i=>i.id===id);
+    S.sec=0;S.run=false;clearInterval(S.iv);renderFoc();
+}
+function clrFoc(){S.foc=null;S.sec=0;S.run=false;clearInterval(S.iv);renderFoc();}
+function doneFoc(){if(S.foc){S.tasks=S.tasks.filter(i=>i.id!==S.foc.id);clrFoc();updCnts();render();}}
+function togTimer(){S.run=!S.run;if(S.run)S.iv=setInterval(()=>{S.sec++;document.getElementById('timer').textContent=fmt(S.sec);},1000);else clearInterval(S.iv);renderFoc();}
+
+function cap(){
+    const I=document.getElementById('capIn'),t=I.value.trim();
+    if(t){S.tasks.unshift({id:Date.now(),sub:t.slice(0,80),cat:S.f==='all'?'erich':S.f,due:'Today',urg:false});I.value='';updCnts();render();document.getElementById('capBtn').disabled=true;}
+}
+
+function emailAction(id){
+    const e=S.emails.find(x=>x.id===id);
+    if(e){
+        addMsg('c',`<strong>${e.sub}</strong><br>From: ${e.fr} (${e.acct})<br><br>What would you like to do?<br>• <strong>Reply</strong> - I'll draft a response<br>• <strong>Archive</strong> - Move out of inbox<br>• <strong>Convert to Task</strong> - Add to your task list<br>${e.hasAttach?'• <strong>Save Attachment</strong> - File the attachment':''}`);
+    }
+}
+
+function attachAction(id){
+    const a=S.attach.find(x=>x.id===id);
+    if(a){
+        let suggestPath = a.acct==='newport'?'OneDrive/Newport Bay/':a.acct==='scef'?'OneDrive/SCEF/':a.acct==='cssi'?'OneDrive/CSSI/':'OneDrive/Personal/';
+        let suggestName = a.nm;
+        addMsg('c',`<strong>${a.nm}</strong><br>From: ${a.eml}<br>Size: ${a.sz}<br><br>Suggested:<br>• <strong>Rename:</strong> "${suggestName}"<br>• <strong>Save to:</strong> ${suggestPath}Documents<br><br>Confirm, or tell me different location?`);
+    }
+}
+
+function saveAttach(id){
+    const a=S.attach.find(x=>x.id===id);
+    if(a){addMsg('c',`Saving <strong>${a.nm}</strong> to OneDrive/${a.acct}/Documents...`);S.attach=S.attach.filter(x=>x.id!==id);updCnts();render();}
+}
+function delAttach(id){S.attach=S.attach.filter(x=>x.id!==id);updCnts();render();addMsg('c','Attachment deleted.');}
+
+function procScan(id){
+    const s=S.scans.find(x=>x.id===id);
+    if(s){addMsg('c',`Found: <strong>${s.nm}</strong><br><br>Suggested:<br>• <strong>Rename:</strong> "2026-02-03_${s.cat==='erich'?'Tax_W2':'Property_Tax'}.pdf"<br>• <strong>File to:</strong> OneDrive/${s.cat}/Documents<br><br>Confirm?`);}
+}
+
+function qa(t){
+    if(t==='emails')addMsg('c',`You have <strong>${S.emails.length} emails</strong>. Let's process them one by one.<br><br>First: <strong>${S.emails[0].sub}</strong><br>From: ${S.emails[0].fr}<br><br>Reply, Archive, or Convert to Task?`);
+    else if(t==='attach')addMsg('c',`You have <strong>${S.attach.length} attachments</strong> to file.<br><br>First: <strong>${S.attach[0].nm}</strong><br>From: ${S.attach[0].fr}<br><br>I suggest saving to OneDrive/${S.attach[0].acct}/Documents. Confirm?`);
+    else if(t==='scans')addMsg('c',`You have <strong>${S.scans.length} scans</strong>. First: <strong>${S.scans[0].nm}</strong><br><br>Suggested:<br>• <strong>Rename:</strong> "2026-02-03_Property_Tax_Seminole.pdf"<br>• <strong>File:</strong> OneDrive/Newport Bay/Tax Notices<br><br>Confirm or change?`);
+    else if(t==='tax')addMsg('c',`Let's set up tax tracking.<br><br>1. <strong>Entities?</strong> (Newport Bay, SCEF, Personal?)<br>2. <strong>Deadline?</strong> (Mar 15 S-Corps, Apr 15 personal?)<br>3. <strong>Who needs docs?</strong> (Bookkeeper, CPA?)<br><br>Tell me and I'll create the project.`);
+}
+
+function addMsg(r,tx){S.msgs.push({r,tx});renderMsgs();}
+function renderMsgs(){document.getElementById('msgs').innerHTML=S.msgs.map(m=>`<div class="msg${m.r==='u'?' user':''}">${m.tx}</div>`).join('');document.getElementById('msgs').scrollTop=9999;}
+
+function sendChat(){
+    const I=document.getElementById('chatIn'),t=I.value.trim();
+    if(t){addMsg('u',t);I.value='';setTimeout(()=>addMsg('c',`Got it. I'll help with "${t.slice(0,30)}..." and set up the appropriate actions.`),500);}
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+    document.getElementById('greet').textContent=greet()+', Erich';
+    document.getElementById('date').textContent=fmtDate();
+    render();renderFoc();updCnts();
+    
+    document.getElementById('filters').onclick=e=>{const b=e.target.closest('.filter');if(b){document.querySelectorAll('.filter').forEach(x=>{x.classList.remove('active');x.style.background='';});b.classList.add('active');b.style.background=b.dataset.c;S.f=b.dataset.f;updCnts();render();}};
+    document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');S.t=t.dataset.t;render();});
+    document.getElementById('capIn').oninput=e=>document.getElementById('capBtn').disabled=!e.target.value.trim();
+    document.getElementById('capIn').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();cap();}};
+    document.getElementById('capBtn').onclick=cap;
+    document.getElementById('chatSend').onclick=sendChat;
+    document.getElementById('chatIn').onkeydown=e=>{if(e.key==='Enter')sendChat();};
+    document.querySelectorAll('.nav-item').forEach(n=>n.onclick=()=>{document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));n.classList.add('active');});
+    
+    document.getElementById('mic').onclick=function(){
+        if('webkitSpeechRecognition' in window){
+            const R=new webkitSpeechRecognition();R.continuous=true;R.interimResults=true;
+            this.classList.add('on');this.textContent='🔴';
+            R.onresult=e=>{document.getElementById('capIn').value=Array.from(e.results).map(r=>r[0].transcript).join('');document.getElementById('capBtn').disabled=false;};
+            R.onend=()=>{this.classList.remove('on');this.textContent='🎤';};
+            R.start();
+        }
+    };
+});
+
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
